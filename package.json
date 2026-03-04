@@ -1,13 +1,25 @@
 {
-  "name": "sigma-plugins",
+  "name": "sigma-venn-plugin",
   "version": "1.0.0",
-  "description": "A simple Hello World Node.js application",
-  "main": "index.js",
+  "description": "A Sigma reporting plugin using UpSet.js Venn Diagrams",
   "scripts": {
-    "start": "node index.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite"
+  },
+  "dependencies": {
+    "@upsetjs/react": "^1.11.0",
+    "papaparse": "^5.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.0"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=18.0.0"
   },
   "license": "ISC"
 }
