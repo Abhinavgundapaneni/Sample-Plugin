@@ -114,10 +114,45 @@ export default function App() {
   const sets = useMemo(() => extractSets(elems), [elems]);
   const combinations = useMemo(() => generateCombinations(sets), [sets]);
 
-  const isReady = sourceConfigured ? !!sigmaData : csvLoaded;
+  // Consider data ready only when the configured columns actually exist in sigmaData
+  const sigmaDataReady =
+    sigmaData != null &&
+    nameColumnId != null &&
+    setsColumnId != null &&
+    sigmaData[nameColumnId] != null;
+
+  const isReady = sourceConfigured ? sigmaDataReady : csvLoaded;
+
+  // Debug info — always visible when Sigma source is configured to help diagnose issues
+  const debugInfo = sourceConfigured ? (
+    <details style={styles.debugDetails}>
+      <summary style={styles.debugSummary}>🔍 Debug info</summary>
+      <pre style={styles.debugPre}>
+        {JSON.stringify(
+          {
+            sourceConfigured,
+            nameColumnId,
+            setsColumnId,
+            sigmaDataKeys: sigmaData ? Object.keys(sigmaData) : null,
+            nameColumnSample: sigmaData && nameColumnId ? (sigmaData[nameColumnId] || []).slice(0, 3) : null,
+            setsColumnSample: sigmaData && setsColumnId ? (sigmaData[setsColumnId] || []).slice(0, 3) : null,
+          },
+          null,
+          2
+        )}
+      </pre>
+    </details>
+  ) : null;
 
   if (!isReady) {
-    return <div style={styles.center}>Loading data...</div>;
+    return (
+      <div style={styles.center}>
+        <div style={{ textAlign: "center" }}>
+          <p>Loading data from Sigma...</p>
+          {debugInfo}
+        </div>
+      </div>
+    );
   }
 
   if (sourceConfigured && (!nameColumnId || !setsColumnId)) {
@@ -128,13 +163,19 @@ export default function App() {
           <p style={{ fontSize: "0.85rem", marginTop: 8 }}>
             Select a <strong>Name Column</strong> and a <strong>Sets Column</strong> (pipe-separated values like <code>Premium|Newsletter</code>).
           </p>
+          {debugInfo}
         </div>
       </div>
     );
   }
 
   if (elems.length === 0) {
-    return <div style={styles.center}>No data to display.</div>;
+    return (
+      <div style={{ ...styles.center, flexDirection: "column", gap: "16px" }}>
+        <p>No data to display.</p>
+        {debugInfo}
+      </div>
+    );
   }
 
   const dataSource = sourceConfigured && sigmaData ? "sigma" : "csv";
@@ -147,6 +188,7 @@ export default function App() {
           {dataSource === "sigma" ? "⚡ Sigma API" : "📄 Sample CSV"}
         </span>
       </div>
+      {debugInfo}
       <div style={styles.chartWrapper}>
         <VennDiagram
           sets={sets}
@@ -210,4 +252,10 @@ const styles = {
   },
   details: { marginTop: "24px" },
   table: { width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.85rem" },
+  debugDetails: { marginTop: "16px", textAlign: "left" },
+  debugSummary: { cursor: "pointer", fontSize: "0.8rem", color: "#888", userSelect: "none" },
+  debugPre: {
+    marginTop: "8px", padding: "12px", background: "#f4f4f4", borderRadius: "6px",
+    fontSize: "0.75rem", overflowX: "auto", border: "1px solid #ddd", whiteSpace: "pre-wrap",
+  },
 };
