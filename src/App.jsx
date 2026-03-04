@@ -137,12 +137,16 @@ export default function App() {
     return <div style={styles.center}>No data to display.</div>;
   }
 
+  const dataSource = sourceConfigured && sigmaData ? "sigma" : "csv";
+
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>{chartTitle} — Venn Diagram</h2>
-      {!sourceConfigured && import.meta.env.DEV && (
-        <p style={styles.devBadge}>⚙ Dev mode — using sample CSV data</p>
-      )}
+      <div style={styles.titleRow}>
+        <h2 style={styles.title}>{chartTitle} — Venn Diagram</h2>
+        <span style={dataSource === "sigma" ? styles.badgeSigma : styles.badgeCsv}>
+          {dataSource === "sigma" ? "⚡ Sigma API" : "📄 Sample CSV"}
+        </span>
+      </div>
       <div style={styles.chartWrapper}>
         <VennDiagram
           sets={sets}
@@ -180,11 +184,17 @@ export default function App() {
 
 const styles = {
   container: { padding: "24px", maxWidth: "860px", margin: "0 auto" },
-  title: { fontSize: "1.4rem", marginBottom: "6px", color: "#1a1a2e" },
-  devBadge: {
-    fontSize: "0.8rem", color: "#888", marginBottom: "16px",
-    background: "#fffbe6", display: "inline-block", padding: "4px 10px",
-    borderRadius: "4px", border: "1px solid #ffe58f",
+  titleRow: { display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" },
+  title: { fontSize: "1.4rem", color: "#1a1a2e", margin: 0 },
+  badgeSigma: {
+    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px",
+    borderRadius: "12px", background: "#d4edda", color: "#155724",
+    border: "1px solid #c3e6cb", whiteSpace: "nowrap",
+  },
+  badgeCsv: {
+    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px",
+    borderRadius: "12px", background: "#fff3cd", color: "#856404",
+    border: "1px solid #ffeeba", whiteSpace: "nowrap",
   },
   chartWrapper: {
     background: "#fff", borderRadius: "8px", padding: "16px",
