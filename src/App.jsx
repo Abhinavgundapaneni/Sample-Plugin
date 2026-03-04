@@ -59,13 +59,14 @@ export default function App() {
   useEditorPanelConfig(EDITOR_PANEL);
 
   // Read user's column selections from Sigma config
+  const sourceId = useConfig("source");
   const nameColumnId = useConfig("nameColumn");
   const setsColumnId = useConfig("setsColumn");
   const chartTitle = useConfig("title") || "Customer Segment Overlap";
-  const sourceConfigured = !!useConfig("source");
+  const sourceConfigured = !!sourceId;
 
-  // Subscribe to live data Sigma pushes for the mapped source element
-  const sigmaData = useElementData("source");
+  // Subscribe to live data Sigma pushes — must pass the actual element ID value, not the config key
+  const sigmaData = useElementData(sourceId);
 
   const [, setLoading] = useLoadingState(true);
   const [selection, setSelection] = useState(null);
@@ -127,8 +128,7 @@ export default function App() {
       <pre style={styles.debugPre}>
         {JSON.stringify(
           {
-            sourceConfigured,
-            nameColumnId,
+            sourceConfigured,            sourceId,            nameColumnId,
             setsColumnId,
             sigmaDataKeys: sigmaData ? Object.keys(sigmaData) : null,
             nameColumnSample: sigmaData && nameColumnId ? (sigmaData[nameColumnId] || []).slice(0, 3) : null,
