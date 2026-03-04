@@ -140,7 +140,7 @@ export default function App() {
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>{chartTitle} — Venn Diagram</h2>
-      {!sourceConfigured && (
+      {!sourceConfigured && import.meta.env.DEV && (
         <p style={styles.devBadge}>⚙ Dev mode — using sample CSV data</p>
       )}
       <div style={styles.chartWrapper}>
