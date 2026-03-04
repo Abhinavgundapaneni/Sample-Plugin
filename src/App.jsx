@@ -114,12 +114,9 @@ export default function App() {
   const sets = useMemo(() => extractSets(elems), [elems]);
   const combinations = useMemo(() => generateCombinations(sets), [sets]);
 
-  // Consider data ready only when the configured columns actually exist in sigmaData
-  const sigmaDataReady =
-    sigmaData != null &&
-    nameColumnId != null &&
-    setsColumnId != null &&
-    sigmaData[nameColumnId] != null;
+  // Ready as soon as Sigma has responded (even with empty data).
+  // Waiting for specific column keys causes infinite loading when data is empty.
+  const sigmaDataReady = sigmaData != null && nameColumnId != null && setsColumnId != null;
 
   const isReady = sourceConfigured ? sigmaDataReady : csvLoaded;
 
@@ -170,9 +167,19 @@ export default function App() {
   }
 
   if (elems.length === 0) {
+    const keysEmpty = sigmaData && Object.keys(sigmaData).length === 0;
     return (
       <div style={{ ...styles.center, flexDirection: "column", gap: "16px" }}>
-        <p>No data to display.</p>
+        <div style={{ textAlign: "center", color: "#666" }}>
+          <p style={{ fontSize: "1.1rem" }}>No data to display.</p>
+          {keysEmpty && (
+            <p style={{ fontSize: "0.85rem", marginTop: 8 }}>
+              Sigma returned an empty data response. Make sure the connected table
+              has rows and that the <strong>Sets Column</strong> contains
+              pipe-separated values (e.g. <code>Premium|Newsletter</code>).
+            </p>
+          )}
+        </div>
         {debugInfo}
       </div>
     );
