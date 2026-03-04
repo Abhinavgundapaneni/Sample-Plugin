@@ -1,0 +1,13 @@
+{
+  "name": "sigma-plugins",
+  "version": "1.0.0",
+  "description": "A simple Hello World Node.js application",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "license": "ISC"
+}
