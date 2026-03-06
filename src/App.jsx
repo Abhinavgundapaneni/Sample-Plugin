@@ -38,7 +38,7 @@ const EDITOR_PANEL = [
 ];
 
 // ─── Dev CSV defaults ──────────────────────────────────────────────────────────
-const DEFAULT_2 = { labelA: "Premium", labelB: "Newsletter", onlyA: 45, onlyB: 30, aAndB: 25 };
+const DEFAULT_2 = { labelA: "Premium", labelB: "Newsletter", onlyA: 45, onlyB: 30, both: 25 };
 const DEFAULT_3 = {
   labelA: "Premium", labelB: "Newsletter", labelC: "Beta",
   onlyA: 28, onlyB: 22, onlyC: 18, aAndB: 14, aAndC: 10, bAndC: 8, allThree: 6,
@@ -50,7 +50,7 @@ function parseCsv2(text) {
   return {
     onlyA: Number(r.only_a) || 0,
     onlyB: Number(r.only_b) || 0,
-    aAndB: Number(r.both) || Number(r.a_and_b) || 0,
+    both: Number(r.both) || Number(r.a_and_b) || 0,
   };
 }
 
