@@ -1,5 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { extractSets, generateCombinations, VennDiagram } from "@upsetjs/react";
+import React, { useState, useEffect } from "react";
 import {
   useEditorPanelConfig,
   useConfig,
@@ -7,262 +6,207 @@ import {
   useLoadingState,
 } from "@sigmacomputing/plugin";
 import Papa from "papaparse";
+import TwoCircleChart from "./components/TwoCircleChart";
+import ThreeCircleChart from "./components/ThreeCircleChart";
+import { readCount } from "./utils/vennUtils";
 
-// ─── Editor Panel Configuration ───────────────────────────────────────────────
-// Declares the inputs that appear in Sigma's right-hand editor panel.
-// Users map their Sigma table columns to these fields.
+// ─── Sigma Editor Panel ────────────────────────────────────────────────────────
+// All fields for both 2-circle and 3-circle modes.
+// The "Chart Type" dropdown controls which page is shown.
 const EDITOR_PANEL = [
   {
-    name: "source",
-    type: "element",
-    label: "Data Source",
+    name: "chartType",
+    type: "dropdown",
+    label: "Chart Type",
+    values: ["2-Circle", "3-Circle"],
+    defaultValue: "2-Circle",
   },
-  {
-    name: "nameColumn",
-    type: "column",
-    source: "source",
-    label: "Name Column",
-    allowedTypes: ["text"],
-  },
-  {
-    name: "setsColumn",
-    type: "column",
-    source: "source",
-    label: "Sets Column (pipe-separated)",
-    allowedTypes: ["text"],
-  },
-  {
-    name: "title",
-    type: "text",
-    label: "Chart Title",
-    placeholder: "Venn Diagram",
-    defaultValue: "Customer Segment Overlap",
-  },
+  { name: "source", type: "element", label: "Data Source" },
+  // Set labels
+  { name: "labelA", type: "text", label: "Set A Label", defaultValue: "Set A" },
+  { name: "labelB", type: "text", label: "Set B Label", defaultValue: "Set B" },
+  { name: "labelC", type: "text", label: "Set C Label  (3-circle only)", defaultValue: "Set C" },
+  // 2-circle columns
+  { name: "onlyA", type: "column", source: "source", label: "Only A Count", allowedTypes: ["number", "integer"] },
+  { name: "onlyB", type: "column", source: "source", label: "Only B Count", allowedTypes: ["number", "integer"] },
+  { name: "aAndB", type: "column", source: "source", label: "A ∩ B Count", allowedTypes: ["number", "integer"] },
+  // Additional 3-circle columns
+  { name: "onlyC", type: "column", source: "source", label: "Only C Count  (3-circle only)", allowedTypes: ["number", "integer"] },
+  { name: "aAndC", type: "column", source: "source", label: "A ∩ C Count  (3-circle only)", allowedTypes: ["number", "integer"] },
+  { name: "bAndC", type: "column", source: "source", label: "B ∩ C Count  (3-circle only)", allowedTypes: ["number", "integer"] },
+  { name: "allThree", type: "column", source: "source", label: "A ∩ B ∩ C Count  (3-circle only)", allowedTypes: ["number", "integer"] },
 ];
 
-// ─── CSV fallback (dev only) ───────────────────────────────────────────────────
-const CSV_URL = "/data.csv";
+// ─── Dev CSV defaults ──────────────────────────────────────────────────────────
+const DEFAULT_2 = { labelA: "Premium", labelB: "Newsletter", onlyA: 45, onlyB: 30, aAndB: 25 };
+const DEFAULT_3 = {
+  labelA: "Premium", labelB: "Newsletter", labelC: "Beta",
+  onlyA: 28, onlyB: 22, onlyC: 18, aAndB: 14, aAndC: 10, bAndC: 8, allThree: 6,
+};
 
-function parseCsvToElems(csvText) {
-  const result = Papa.parse(csvText.trim(), { header: true, skipEmptyLines: true });
-  return result.data.map((row) => ({
-    name: row.name,
-    sets: row.sets
-      .split("|")
-      .map((s) => s.trim())
-      .filter(Boolean),
-  }));
+function parseCsv2(text) {
+  const rows = Papa.parse(text.trim(), { header: true, skipEmptyLines: true }).data;
+  const r = rows[0] || {};
+  return {
+    onlyA: Number(r.only_a) || 0,
+    onlyB: Number(r.only_b) || 0,
+    aAndB: Number(r.both) || Number(r.a_and_b) || 0,
+  };
+}
+
+function parseCsv3(text) {
+  const rows = Papa.parse(text.trim(), { header: true, skipEmptyLines: true }).data;
+  const r = rows[0] || {};
+  return {
+    onlyA: Number(r.only_a) || 0,
+    onlyB: Number(r.only_b) || 0,
+    onlyC: Number(r.only_c) || 0,
+    aAndB: Number(r.a_and_b) || 0,
+    aAndC: Number(r.a_and_c) || 0,
+    bAndC: Number(r.b_and_c) || 0,
+    allThree: Number(r.all_three) || 0,
+  };
 }
 
 export default function App() {
-  // Register editor panel inputs with Sigma
   useEditorPanelConfig(EDITOR_PANEL);
 
-  // Read user's column selections from Sigma config
+  // Sigma config values
+  const sigmaChartType = useConfig("chartType");
   const sourceId = useConfig("source");
-  const nameColumnId = useConfig("nameColumn");
-  const setsColumnId = useConfig("setsColumn");
-  const chartTitle = useConfig("title") || "Customer Segment Overlap";
+  const labelA = useConfig("labelA") || "Set A";
+  const labelB = useConfig("labelB") || "Set B";
+  const labelC = useConfig("labelC") || "Set C";
+  const onlyACol = useConfig("onlyA");
+  const onlyBCol = useConfig("onlyB");
+  const aAndBCol = useConfig("aAndB");
+  const onlyCCol = useConfig("onlyC");
+  const aAndCCol = useConfig("aAndC");
+  const bAndCCol = useConfig("bAndC");
+  const allThreeCol = useConfig("allThree");
+
   const sourceConfigured = !!sourceId;
-
-  // Subscribe to live data Sigma pushes — must pass the actual element ID value, not the config key
   const sigmaData = useElementData(sourceId);
-
   const [, setLoading] = useLoadingState(true);
-  const [selection, setSelection] = useState(null);
-  const [csvElems, setCsvElems] = useState([]);
-  const [csvLoaded, setCsvLoaded] = useState(false);
 
-  // ── Dev fallback: load CSV when not running inside Sigma ──────────────────
+  // Local tab state (dev mode) — syncs with Sigma chartType when configured
+  const [activeTab, setActiveTab] = useState("2-Circle");
+
+  // Dev CSV fallback data
+  const [csv2, setCsv2] = useState(DEFAULT_2);
+  const [csv3, setCsv3] = useState(DEFAULT_3);
+  const [devReady, setDevReady] = useState(false);
+
   useEffect(() => {
-    if (sourceConfigured) return; // Sigma is providing data, skip CSV
-    fetch(CSV_URL)
-      .then((r) => r.text())
-      .then((text) => {
-        setCsvElems(parseCsvToElems(text));
-        setCsvLoaded(true);
-        setLoading(false);
-      })
-      .catch(() => {
-        setCsvLoaded(true);
-        setLoading(false);
-      });
+    if (sourceConfigured) return;
+    Promise.all([
+      fetch("/data_2circle.csv").then((r) => r.text()).then(parseCsv2).catch(() => DEFAULT_2),
+      fetch("/data_3circle.csv").then((r) => r.text()).then(parseCsv3).catch(() => DEFAULT_3),
+    ]).then(([d2, d3]) => {
+      setCsv2(d2);
+      setCsv3(d3);
+      setDevReady(true);
+      setLoading(false);
+    });
   }, [sourceConfigured]);
 
-  // ── Build elements array from whichever data source is active ─────────────
-  const elems = useMemo(() => {
-    // Running inside Sigma with columns mapped
-    if (sourceConfigured && nameColumnId && setsColumnId && sigmaData) {
-      const names = sigmaData[nameColumnId] ?? [];
-      const setsValues = sigmaData[setsColumnId] ?? [];
-      const result = [];
-      for (let i = 0; i < names.length; i++) {
-        const name = String(names[i] ?? "").trim();
-        const rawSets = String(setsValues[i] ?? "");
-        const sets = rawSets
-          .split("|")
-          .map((s) => s.trim())
-          .filter(Boolean);
-        if (name && sets.length > 0) result.push({ name, sets });
+  // Determine active view
+  const activeView = sourceConfigured ? (sigmaChartType || "2-Circle") : activeTab;
+
+  // Build props from Sigma data or CSV fallback
+  const twoProps = sourceConfigured && sigmaData
+    ? {
+        labelA, labelB,
+        onlyA: readCount(sigmaData, onlyACol),
+        onlyB: readCount(sigmaData, onlyBCol),
+        both: readCount(sigmaData, aAndBCol),
       }
-      setLoading(false);
-      return result;
-    }
-    // Dev fallback
-    return csvElems;
-  }, [sourceConfigured, nameColumnId, setsColumnId, sigmaData, csvElems]);
+    : { ...csv2, labelA: DEFAULT_2.labelA, labelB: DEFAULT_2.labelB };
 
-  const sets = useMemo(() => extractSets(elems), [elems]);
-  const combinations = useMemo(() => generateCombinations(sets), [sets]);
+  const threeProps = sourceConfigured && sigmaData
+    ? {
+        labelA, labelB, labelC,
+        onlyA: readCount(sigmaData, onlyACol),
+        onlyB: readCount(sigmaData, onlyBCol),
+        onlyC: readCount(sigmaData, onlyCCol),
+        aAndB: readCount(sigmaData, aAndBCol),
+        aAndC: readCount(sigmaData, aAndCCol),
+        bAndC: readCount(sigmaData, bAndCCol),
+        allThree: readCount(sigmaData, allThreeCol),
+      }
+    : { ...csv3, labelA: DEFAULT_3.labelA, labelB: DEFAULT_3.labelB, labelC: DEFAULT_3.labelC };
 
-  // Ready as soon as Sigma has responded (even with empty data).
-  // Waiting for specific column keys causes infinite loading when data is empty.
-  const sigmaDataReady = sigmaData != null && nameColumnId != null && setsColumnId != null;
+  const sigmaReady = sourceConfigured ? (sigmaData != null) : devReady;
 
-  const isReady = sourceConfigured ? sigmaDataReady : csvLoaded;
-
-  // Debug info — always visible when Sigma source is configured to help diagnose issues
-  const debugInfo = sourceConfigured ? (
-    <details style={styles.debugDetails}>
-      <summary style={styles.debugSummary}>🔍 Debug info</summary>
-      <pre style={styles.debugPre}>
-        {JSON.stringify(
-          {
-            sourceConfigured,            sourceId,            nameColumnId,
-            setsColumnId,
-            sigmaDataKeys: sigmaData ? Object.keys(sigmaData) : null,
-            nameColumnSample: sigmaData && nameColumnId ? (sigmaData[nameColumnId] || []).slice(0, 3) : null,
-            setsColumnSample: sigmaData && setsColumnId ? (sigmaData[setsColumnId] || []).slice(0, 3) : null,
-          },
-          null,
-          2
-        )}
-      </pre>
-    </details>
-  ) : null;
-
-  if (!isReady) {
-    return (
-      <div style={styles.center}>
-        <div style={{ textAlign: "center" }}>
-          <p>Loading data from Sigma...</p>
-          {debugInfo}
-        </div>
-      </div>
-    );
+  if (!sigmaReady) {
+    return <div style={styles.center}>Loading...</div>;
   }
-
-  if (sourceConfigured && (!nameColumnId || !setsColumnId)) {
-    return (
-      <div style={styles.center}>
-        <div style={{ textAlign: "center", color: "#666" }}>
-          <p>👈 Configure columns in the editor panel on the right.</p>
-          <p style={{ fontSize: "0.85rem", marginTop: 8 }}>
-            Select a <strong>Name Column</strong> and a <strong>Sets Column</strong> (pipe-separated values like <code>Premium|Newsletter</code>).
-          </p>
-          {debugInfo}
-        </div>
-      </div>
-    );
-  }
-
-  if (elems.length === 0) {
-    const keysEmpty = sigmaData && Object.keys(sigmaData).length === 0;
-    return (
-      <div style={{ ...styles.center, flexDirection: "column", gap: "16px" }}>
-        <div style={{ textAlign: "center", color: "#666" }}>
-          <p style={{ fontSize: "1.1rem" }}>No data to display.</p>
-          {keysEmpty && (
-            <p style={{ fontSize: "0.85rem", marginTop: 8 }}>
-              Sigma returned an empty data response. Make sure the connected table
-              has rows and that the <strong>Sets Column</strong> contains
-              pipe-separated values (e.g. <code>Premium|Newsletter</code>).
-            </p>
-          )}
-        </div>
-        {debugInfo}
-      </div>
-    );
-  }
-
-  const dataSource = sourceConfigured && sigmaData ? "sigma" : "csv";
 
   return (
     <div style={styles.container}>
-      <div style={styles.titleRow}>
-        <h2 style={styles.title}>{chartTitle} — Venn Diagram</h2>
-        <span style={dataSource === "sigma" ? styles.badgeSigma : styles.badgeCsv}>
-          {dataSource === "sigma" ? "⚡ Sigma API" : "📄 Sample CSV"}
-        </span>
-      </div>
-      {debugInfo}
-      <div style={styles.chartWrapper}>
-        <VennDiagram
-          sets={sets}
-          combinations={combinations}
-          width={780}
-          height={420}
-          selection={selection}
-          onHover={setSelection}
-        />
-      </div>
-      {selection && (
-        <div style={styles.selectionBox}>
-          <strong>Selected:</strong> {selection.name} — {selection.cardinality} member(s)
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.headerLeft}>
+          <h2 style={styles.title}>Venn Diagram</h2>
+          <span style={sourceConfigured ? styles.badgeSigma : styles.badgeCsv}>
+            {sourceConfigured ? "⚡ Sigma API" : "📄 Sample CSV"}
+          </span>
         </div>
+        {/* Only show manual tab switcher in dev mode; Sigma controls it via editor panel */}
+        {!sourceConfigured && (
+          <div style={styles.tabs}>
+            <Tab label="2-Circle" active={activeTab === "2-Circle"} onClick={() => setActiveTab("2-Circle")} />
+            <Tab label="3-Circle" active={activeTab === "3-Circle"} onClick={() => setActiveTab("3-Circle")} />
+          </div>
+        )}
+      </div>
+
+      {/* Page content */}
+      {activeView === "2-Circle" ? (
+        <TwoCircleChart {...twoProps} />
+      ) : (
+        <ThreeCircleChart {...threeProps} />
       )}
-      <details style={styles.details}>
-        <summary>View raw elements ({elems.length})</summary>
-        <table style={styles.table}>
-          <thead>
-            <tr><th>Name</th><th>Sets</th></tr>
-          </thead>
-          <tbody>
-            {elems.map((e) => (
-              <tr key={e.name}>
-                <td>{e.name}</td>
-                <td>{e.sets.join(", ")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
     </div>
   );
 }
 
+function Tab({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={active ? styles.tabActive : styles.tab}>
+      {label}
+    </button>
+  );
+}
+
 const styles = {
-  container: { padding: "24px", maxWidth: "860px", margin: "0 auto" },
-  titleRow: { display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" },
-  title: { fontSize: "1.4rem", color: "#1a1a2e", margin: 0 },
+  container: { padding: "20px", maxWidth: "900px", margin: "0 auto" },
+  header: {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    marginBottom: "20px", flexWrap: "wrap", gap: "10px",
+  },
+  headerLeft: { display: "flex", alignItems: "center", gap: "10px" },
+  title: { fontSize: "1.3rem", color: "#1a1a2e", margin: 0 },
   badgeSigma: {
-    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px",
-    borderRadius: "12px", background: "#d4edda", color: "#155724",
-    border: "1px solid #c3e6cb", whiteSpace: "nowrap",
+    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px", borderRadius: "12px",
+    background: "#d4edda", color: "#155724", border: "1px solid #c3e6cb",
   },
   badgeCsv: {
-    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px",
-    borderRadius: "12px", background: "#fff3cd", color: "#856404",
-    border: "1px solid #ffeeba", whiteSpace: "nowrap",
+    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px", borderRadius: "12px",
+    background: "#fff3cd", color: "#856404", border: "1px solid #ffeeba",
   },
-  chartWrapper: {
-    background: "#fff", borderRadius: "8px", padding: "16px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.08)", display: "inline-block",
+  tabs: { display: "flex", gap: "4px" },
+  tab: {
+    padding: "6px 16px", border: "1px solid #d1d5db", borderRadius: "6px",
+    background: "#fff", cursor: "pointer", fontSize: "0.85rem", color: "#555",
   },
-  selectionBox: {
-    marginTop: "16px", padding: "10px 16px", background: "#e8f4fd",
-    borderRadius: "6px", fontSize: "0.9rem",
+  tabActive: {
+    padding: "6px 16px", border: "1px solid #4c8bf5", borderRadius: "6px",
+    background: "#4c8bf5", cursor: "pointer", fontSize: "0.85rem",
+    color: "#fff", fontWeight: 600,
   },
   center: {
     display: "flex", justifyContent: "center", alignItems: "center",
-    height: "100vh", fontSize: "1.1rem",
-  },
-  details: { marginTop: "24px" },
-  table: { width: "100%", borderCollapse: "collapse", marginTop: "10px", fontSize: "0.85rem" },
-  debugDetails: { marginTop: "16px", textAlign: "left" },
-  debugSummary: { cursor: "pointer", fontSize: "0.8rem", color: "#888", userSelect: "none" },
-  debugPre: {
-    marginTop: "8px", padding: "12px", background: "#f4f4f4", borderRadius: "6px",
-    fontSize: "0.75rem", overflowX: "auto", border: "1px solid #ddd", whiteSpace: "pre-wrap",
+    height: "100vh", fontSize: "1rem", color: "#666",
   },
 };

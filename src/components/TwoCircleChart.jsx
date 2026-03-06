@@ -1,0 +1,85 @@
+import React, { useMemo, useState } from "react";
+import { extractSets, generateCombinations, VennDiagram } from "@upsetjs/react";
+import { buildTwoCircleElems, readCount } from "../utils/vennUtils";
+
+/**
+ * TwoCircleChart
+ *
+ * Props (from Sigma config or CSV dev data):
+ *   labelA, labelB          — set names
+ *   onlyA, onlyB, both      — pre-computed cardinalities
+ */
+export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
+  const [selection, setSelection] = useState(null);
+
+  const elems = useMemo(
+    () => buildTwoCircleElems(labelA, labelB, onlyA, onlyB, both),
+    [labelA, labelB, onlyA, onlyB, both]
+  );
+
+  const sets = useMemo(() => extractSets(elems), [elems]);
+  const combinations = useMemo(() => generateCombinations(sets), [sets]);
+
+  const total = Number(onlyA) + Number(onlyB) + Number(both);
+
+  if (total === 0) {
+    return <p style={{ color: "#888", textAlign: "center", marginTop: 40 }}>No data — all counts are zero.</p>;
+  }
+
+  return (
+    <div>
+      <div style={styles.statsRow}>
+        <Stat label={labelA} value={Number(onlyA) + Number(both)} sub="total in set" />
+        <Stat label={labelB} value={Number(onlyB) + Number(both)} sub="total in set" />
+        <Stat label={`${labelA} ∩ ${labelB}`} value={Number(both)} sub="intersection" />
+        <Stat label="Total" value={total} sub="unique items" />
+      </div>
+      <div style={styles.chartWrapper}>
+        <VennDiagram
+          sets={sets}
+          combinations={combinations}
+          width={680}
+          height={360}
+          selection={selection}
+          onHover={setSelection}
+        />
+      </div>
+      {selection && (
+        <div style={styles.tooltip}>
+          <strong>{selection.name}</strong> — {selection.cardinality} item{selection.cardinality !== 1 ? "s" : ""}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, sub }) {
+  return (
+    <div style={styles.stat}>
+      <div style={styles.statValue}>{value.toLocaleString()}</div>
+      <div style={styles.statLabel}>{label}</div>
+      <div style={styles.statSub}>{sub}</div>
+    </div>
+  );
+}
+
+const styles = {
+  statsRow: {
+    display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px",
+  },
+  stat: {
+    flex: "1 1 100px", background: "#fff", border: "1px solid #e2e8f0",
+    borderRadius: "8px", padding: "12px 16px", textAlign: "center",
+  },
+  statValue: { fontSize: "1.6rem", fontWeight: 700, color: "#1a1a2e" },
+  statLabel: { fontSize: "0.8rem", fontWeight: 600, color: "#555", marginTop: 2 },
+  statSub: { fontSize: "0.7rem", color: "#999" },
+  chartWrapper: {
+    background: "#fff", borderRadius: "8px", padding: "16px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)", display: "inline-block",
+  },
+  tooltip: {
+    marginTop: "12px", padding: "8px 14px", background: "#e8f4fd",
+    borderRadius: "6px", fontSize: "0.9rem", display: "inline-block",
+  },
+};
