@@ -38,32 +38,14 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
         <Stat label="Total" value={total} sub="unique items" />
       </div>
       <div style={styles.chartWrapper}>
-        {/* Venn diagram with SVG overlay showing label + count inside each circle */}
-        <div style={{ position: "relative", width: 680, height: 360 }}>
-          <VennDiagram
-            sets={sets}
-            combinations={combinations}
-            width={680}
-            height={360}
-            selection={selection}
-            onHover={setSelection}
-          />
-          <svg
-            width={680}
-            height={360}
-            style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
-          >
-            {/* Label A — left exclusive region */}
-            <text x={145} y={168} textAnchor="middle" style={styles.circleLabel}>{labelA}</text>
-            <text x={145} y={193} textAnchor="middle" style={styles.circleValue}>{totalA.toLocaleString()}</text>
-            {/* Label B — right exclusive region */}
-            <text x={535} y={168} textAnchor="middle" style={styles.circleLabel}>{labelB}</text>
-            <text x={535} y={193} textAnchor="middle" style={styles.circleValue}>{totalB.toLocaleString()}</text>
-            {/* Intersection label */}
-            <text x={340} y={168} textAnchor="middle" style={styles.overlapLabel}>{labelA} ∩ {labelB}</text>
-            <text x={340} y={190} textAnchor="middle" style={styles.overlapValue}>{Number(both).toLocaleString()}</text>
-          </svg>
-        </div>
+        <VennDiagram
+          sets={sets}
+          combinations={combinations}
+          width={680}
+          height={360}
+          selection={selection}
+          onHover={setSelection}
+        />
       </div>
       {selection && (
         <div style={styles.tooltip}>
@@ -98,22 +80,6 @@ const styles = {
   chartWrapper: {
     background: "#fff", borderRadius: "8px", padding: "16px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.06)", display: "inline-block",
-  },
-  circleLabel: {
-    fontSize: "13px", fontWeight: 700, fill: "#1a1a2e",
-    fontFamily: "system-ui, sans-serif", letterSpacing: "0.01em",
-  },
-  circleValue: {
-    fontSize: "18px", fontWeight: 800, fill: "#4c8bf5",
-    fontFamily: "system-ui, sans-serif",
-  },
-  overlapLabel: {
-    fontSize: "11px", fontWeight: 600, fill: "#333",
-    fontFamily: "system-ui, sans-serif",
-  },
-  overlapValue: {
-    fontSize: "15px", fontWeight: 800, fill: "#e74c8f",
-    fontFamily: "system-ui, sans-serif",
   },
   tooltip: {
     marginTop: "12px", padding: "8px 14px", background: "#e8f4fd",

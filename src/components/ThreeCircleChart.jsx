@@ -58,32 +58,14 @@ export default function ThreeCircleChart({
         <Stat label="Total" value={total} sub="unique items" color="#546e7a" />
       </div>
       <div style={styles.chartWrapper}>
-        {/* Venn diagram with SVG overlay for circle labels and counts */}
-        <div style={{ position: "relative", width: 720, height: 420 }}>
-          <VennDiagram
-            sets={sets}
-            combinations={combinations}
-            width={720}
-            height={420}
-            selection={selection}
-            onHover={setSelection}
-          />
-          <svg
-            width={720}
-            height={420}
-            style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
-          >
-            {/* Circle A — top exclusive region */}
-            <text x={360} y={105} textAnchor="middle" style={circleStyles.label}>{labelA}</text>
-            <text x={360} y={128} textAnchor="middle" style={{ ...circleStyles.value, fill: "#4c8bf5" }}>{sizeA.toLocaleString()}</text>
-            {/* Circle B — bottom-left exclusive region */}
-            <text x={192} y={338} textAnchor="middle" style={circleStyles.label}>{labelB}</text>
-            <text x={192} y={361} textAnchor="middle" style={{ ...circleStyles.value, fill: "#f5a623" }}>{sizeB.toLocaleString()}</text>
-            {/* Circle C — bottom-right exclusive region */}
-            <text x={528} y={338} textAnchor="middle" style={circleStyles.label}>{labelC}</text>
-            <text x={528} y={361} textAnchor="middle" style={{ ...circleStyles.value, fill: "#7ed321" }}>{sizeC.toLocaleString()}</text>
-          </svg>
-        </div>
+        <VennDiagram
+          sets={sets}
+          combinations={combinations}
+          width={720}
+          height={420}
+          selection={selection}
+          onHover={setSelection}
+        />
       </div>
       {selection && (
         <div style={styles.tooltip}>
@@ -103,17 +85,6 @@ function Stat({ label, value, sub, color }) {
     </div>
   );
 }
-
-const circleStyles = {
-  label: {
-    fontSize: "13px", fontWeight: 700, fill: "#1a1a2e",
-    fontFamily: "system-ui, sans-serif",
-  },
-  value: {
-    fontSize: "18px", fontWeight: 800,
-    fontFamily: "system-ui, sans-serif",
-  },
-};
 
 const styles = {
   statsGrid: {
