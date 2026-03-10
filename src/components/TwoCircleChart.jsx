@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { extractSets, generateCombinations, VennDiagram } from "@upsetjs/react";
-import { buildTwoCircleElems, readCount } from "../utils/vennUtils";
+import { buildTwoCircleElems } from "../utils/vennUtils";
 
 /**
  * TwoCircleChart
@@ -11,6 +11,18 @@ import { buildTwoCircleElems, readCount } from "../utils/vennUtils";
  */
 export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
   const [selection, setSelection] = useState(null);
+  const chartRef = useRef(null);
+
+  // Remove UpSet.js <title> elements that cause "Premium ∩ Premium" native browser tooltips
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+    const clean = () => el.querySelectorAll("title").forEach((t) => t.remove());
+    const observer = new MutationObserver(clean);
+    observer.observe(el, { childList: true, subtree: true });
+    clean();
+    return () => observer.disconnect();
+  }, []);
 
   const elems = useMemo(
     () => buildTwoCircleElems(labelA, labelB, onlyA, onlyB, both),
@@ -37,7 +49,7 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
         <Stat label={`${labelA} ∩ ${labelB}`} value={Number(both)} sub="intersection" />
         <Stat label="Total" value={total} sub="unique items" />
       </div>
-      <div style={styles.chartWrapper}>
+      <div style={styles.chartWrapper} ref={chartRef}>
         <VennDiagram
           sets={sets}
           combinations={combinations}
@@ -49,7 +61,12 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
       </div>
       {selection && (
         <div style={styles.tooltip}>
-          <strong>{selection.name}</strong> — {selection.cardinality} item{selection.cardinality !== 1 ? "s" : ""}
+          <strong>
+            {selection.sets
+              ? Array.from(selection.sets).map((s) => s.name).join(" \u2229 ")
+              : selection.name}
+          </strong>{" "}
+          — {selection.cardinality} item{selection.cardinality !== 1 ? "s" : ""}
         </div>
       )}
     </div>
