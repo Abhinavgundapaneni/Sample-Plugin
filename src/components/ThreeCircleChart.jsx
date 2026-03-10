@@ -22,6 +22,7 @@ export default function ThreeCircleChart({
   const [colorA, setColorA] = useState("#4c8bf5");
   const [colorB, setColorB] = useState("#f5a623");
   const [colorC, setColorC] = useState("#7ed321");
+  const [filled, setFilled] = useState(true);
   const chartRef = useRef(null);
   const wrapperRef = useRef(null);
 
@@ -49,12 +50,13 @@ export default function ThreeCircleChart({
   const sets = useMemo(() => {
     const s = extractSets(elems);
     s.forEach((set) => {
+      if (!filled) { set.color = undefined; return; }
       if (set.name === labelA) set.color = colorA;
       else if (set.name === labelB) set.color = colorB;
       else set.color = colorC;
     });
     return s;
-  }, [elems, labelA, labelB, colorA, colorB, colorC]);
+  }, [elems, labelA, labelB, colorA, colorB, colorC, filled]);
   const combinations = useMemo(() => generateCombinations(sets), [sets]);
 
   const total =
@@ -86,7 +88,8 @@ export default function ThreeCircleChart({
             height={420}
             selection={selection}
             onHover={setSelection}
-            filled
+            selectionColor=""
+            filled={filled}
           />
         </div>
         {selection && (
@@ -110,10 +113,36 @@ export default function ThreeCircleChart({
       {/* Color picker panel */}
       <div style={styles.colorPanel}>
         <p style={styles.colorPanelTitle}>Colors</p>
+        <FillToggle filled={filled} onChange={setFilled} />
         <ColorSwatch label={labelA} color={colorA} onChange={setColorA} />
         <ColorSwatch label={labelB} color={colorB} onChange={setColorB} />
         <ColorSwatch label={labelC} color={colorC} onChange={setColorC} />
       </div>
+    </div>
+  );
+}
+
+function FillToggle({ filled, onChange }) {
+  return (
+    <div style={styles.toggleRow}>
+      <span style={styles.swatchLabel}>Fill</span>
+      <label style={styles.toggleSwitch}>
+        <input
+          type="checkbox"
+          checked={filled}
+          onChange={(e) => onChange(e.target.checked)}
+          style={{ display: "none" }}
+        />
+        <span style={{
+          ...styles.toggleTrack,
+          background: filled ? "#4c8bf5" : "#ccc",
+        }}>
+          <span style={{
+            ...styles.toggleThumb,
+            transform: filled ? "translateX(16px)" : "translateX(0px)",
+          }} />
+        </span>
+      </label>
     </div>
   );
 }
@@ -170,6 +199,18 @@ const styles = {
     borderRadius: "6px", cursor: "pointer", padding: "2px", background: "none",
   },
   swatchHex: { fontSize: "0.75rem", color: "#666", fontFamily: "monospace" },
+  toggleRow: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+  toggleSwitch: { cursor: "pointer", display: "inline-block" },
+  toggleTrack: {
+    display: "inline-flex", width: "36px", height: "20px",
+    borderRadius: "10px", padding: "2px", transition: "background 0.2s",
+    alignItems: "center",
+  },
+  toggleThumb: {
+    width: "16px", height: "16px", borderRadius: "50%", background: "#fff",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.3)", transition: "transform 0.2s",
+    display: "block",
+  },
   tooltip: {
     padding: "7px 12px",
     background: "rgba(30,30,40,0.88)",
