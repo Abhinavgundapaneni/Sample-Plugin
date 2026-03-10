@@ -18,7 +18,7 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
   const chartRef = useRef(null);
   const wrapperRef = useRef(null);
 
-  // Remove UpSet.js <title> elements that cause "Premium ∩ Premium" native browser tooltips
+  // Remove UpSet.js <title> elements that cause native browser tooltips
   useEffect(() => {
     const el = chartRef.current;
     if (!el) return;
@@ -28,6 +28,24 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
     clean();
     return () => observer.disconnect();
   }, []);
+
+  // Apply per-set stroke color and thickness
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+    const applyStrokes = () => {
+      const circles = el.querySelectorAll('[class*="stroke-circle"]');
+      const colors = [colorA, colorB];
+      circles.forEach((circle, i) => {
+        circle.style.stroke = colors[i] ?? colors[colors.length - 1];
+        circle.style.strokeWidth = "3";
+      });
+    };
+    applyStrokes();
+    const observer = new MutationObserver(applyStrokes);
+    observer.observe(el, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [colorA, colorB]);
 
   const elems = useMemo(
     () => buildTwoCircleElems(labelA, labelB, onlyA, onlyB, both),
@@ -68,7 +86,7 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
             height={360}
             selection={selection}
             onHover={setSelection}
-            selectionColor=""
+            selectionColor={filled ? "" : "white"}
             filled={filled}
           />
         </div>
