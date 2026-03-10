@@ -18,7 +18,9 @@ export default function ThreeCircleChart({
   allThree,
 }) {
   const [selection, setSelection] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const chartRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   // Remove UpSet.js <title> elements that cause "Premium ∩ Premium" native browser tooltips
   useEffect(() => {
@@ -58,7 +60,12 @@ export default function ThreeCircleChart({
   const sizeC = Number(onlyC) + Number(aAndC) + Number(bAndC) + Number(allThree);
 
   return (
-    <div>
+    <div
+      ref={wrapperRef}
+      style={{ position: "relative" }}
+      onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
+      onMouseLeave={() => setSelection(null)}
+    >
       <div style={styles.statsGrid}>
         <Stat label={labelA} value={sizeA} sub="total in set" color="#4c8bf5" />
         <Stat label={labelB} value={sizeB} sub="total in set" color="#f5a623" />
@@ -80,13 +87,19 @@ export default function ThreeCircleChart({
         />
       </div>
       {selection && (
-        <div style={styles.tooltip}>
+        <div style={{
+          ...styles.tooltip,
+          position: "fixed",
+          left: mousePos.x + 14,
+          top: mousePos.y - 36,
+          pointerEvents: "none",
+        }}>
           <strong>
             {selection.sets
-              ? Array.from(selection.sets).map((s) => s.name).join(" \u2229 ")
+              ? Array.from(selection.sets).map((s) => s.name).join(" ∩ ")
               : selection.name}
-          </strong>{" "}
-          — {selection.cardinality} item{selection.cardinality !== 1 ? "s" : ""}
+          </strong>
+          {" — "}{selection.cardinality.toLocaleString()} item{selection.cardinality !== 1 ? "s" : ""}
         </div>
       )}
     </div>
@@ -122,7 +135,13 @@ const styles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.06)", display: "inline-block",
   },
   tooltip: {
-    marginTop: "12px", padding: "8px 14px", background: "#e8f4fd",
-    borderRadius: "6px", fontSize: "0.9rem", display: "inline-block",
+    padding: "7px 12px",
+    background: "rgba(30,30,40,0.88)",
+    color: "#fff",
+    borderRadius: "6px",
+    fontSize: "0.85rem",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+    whiteSpace: "nowrap",
+    zIndex: 100,
   },
 };
