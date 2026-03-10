@@ -50,12 +50,6 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
       onMouseLeave={() => setSelection(null)}
     >
-      <div style={styles.statsRow}>
-        <Stat label={labelA} value={totalA} sub="total in set" />
-        <Stat label={labelB} value={totalB} sub="total in set" />
-        <Stat label={`${labelA} ∩ ${labelB}`} value={Number(both)} sub="intersection" />
-        <Stat label="Total" value={total} sub="unique items" />
-      </div>
       <div style={styles.chartWrapper} ref={chartRef}>
         <VennDiagram
           sets={sets}
@@ -97,16 +91,6 @@ function Stat({ label, value, sub }) {
 }
 
 const styles = {
-  statsRow: {
-    display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px",
-  },
-  stat: {
-    flex: "1 1 100px", background: "#fff", border: "1px solid #e2e8f0",
-    borderRadius: "8px", padding: "12px 16px", textAlign: "center",
-  },
-  statValue: { fontSize: "1.6rem", fontWeight: 700, color: "#1a1a2e" },
-  statLabel: { fontSize: "0.8rem", fontWeight: 600, color: "#555", marginTop: 2 },
-  statSub: { fontSize: "0.7rem", color: "#999" },
   chartWrapper: {
     background: "#fff", borderRadius: "8px", padding: "16px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.06)", display: "inline-block",

@@ -5,7 +5,6 @@ import {
   useElementData,
   useLoadingState,
 } from "@sigmacomputing/plugin";
-import { NavLink } from "react-router-dom";
 import Papa from "papaparse";
 import ThreeCircleChart from "../components/ThreeCircleChart";
 import { readCount } from "../utils/vennUtils";
@@ -98,24 +97,6 @@ export default function ThreeCirclePage() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <div style={styles.headerLeft}>
-          <h2 style={styles.title}>3-Circle Venn Diagram</h2>
-          <span style={sourceConfigured ? styles.badgeSigma : styles.badgeCsv}>
-            {sourceConfigured ? "⚡ Sigma API" : "📄 Sample CSV"}
-          </span>
-        </div>
-        {!sourceConfigured && (
-          <nav style={styles.nav}>
-            <NavLink to="/2-circle" style={({ isActive }) => isActive ? styles.navActive : styles.navLink}>
-              2-Circle
-            </NavLink>
-            <NavLink to="/3-circle" style={({ isActive }) => isActive ? styles.navActive : styles.navLink}>
-              3-Circle
-            </NavLink>
-          </nav>
-        )}
-      </div>
       <ThreeCircleChart {...chartProps} />
     </div>
   );

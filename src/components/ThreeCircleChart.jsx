@@ -66,16 +66,6 @@ export default function ThreeCircleChart({
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
       onMouseLeave={() => setSelection(null)}
     >
-      <div style={styles.statsGrid}>
-        <Stat label={labelA} value={sizeA} sub="total in set" color="#4c8bf5" />
-        <Stat label={labelB} value={sizeB} sub="total in set" color="#f5a623" />
-        <Stat label={labelC} value={sizeC} sub="total in set" color="#7ed321" />
-        <Stat label={`${labelA} ∩ ${labelB}`} value={Number(aAndB) + Number(allThree)} sub="overlap" color="#e8a0c8" />
-        <Stat label={`${labelA} ∩ ${labelC}`} value={Number(aAndC) + Number(allThree)} sub="overlap" color="#a0c8e8" />
-        <Stat label={`${labelB} ∩ ${labelC}`} value={Number(bAndC) + Number(allThree)} sub="overlap" color="#c8e8a0" />
-        <Stat label="All Three" value={Number(allThree)} sub="triple overlap" color="#b39ddb" />
-        <Stat label="Total" value={total} sub="unique items" color="#546e7a" />
-      </div>
       <div style={styles.chartWrapper} ref={chartRef}>
         <VennDiagram
           sets={sets}
@@ -117,19 +107,6 @@ function Stat({ label, value, sub, color }) {
 }
 
 const styles = {
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-    gap: "10px",
-    marginBottom: "20px",
-  },
-  stat: {
-    background: "#fff", border: "1px solid #e2e8f0",
-    borderRadius: "8px", padding: "10px 12px", textAlign: "center",
-  },
-  statValue: { fontSize: "1.4rem", fontWeight: 700 },
-  statLabel: { fontSize: "0.75rem", fontWeight: 600, color: "#555", marginTop: 2 },
-  statSub: { fontSize: "0.65rem", color: "#999" },
   chartWrapper: {
     background: "#fff", borderRadius: "8px", padding: "16px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.06)", display: "inline-block",
