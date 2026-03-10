@@ -19,7 +19,7 @@ const EDITOR_PANEL = [
   { name: "aAndB", type: "column", source: "source", label: "A ∩ B Count", allowedTypes: ["number", "integer"] },
 ];
 
-const DEFAULT = { labelA: "Premium", labelB: "Newsletter", onlyA: 45, onlyB: 30, both: 25 };
+const DEFAULT = { labelA: "Treaters", labelB: "Writers", onlyA: 45, onlyB: 30, both: 25 };
 
 function parseCsv(text) {
   const rows = Papa.parse(text.trim(), { header: true, skipEmptyLines: true }).data;
