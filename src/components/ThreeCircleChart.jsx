@@ -45,15 +45,15 @@ export default function ThreeCircleChart({
       const circles = el.querySelectorAll('[class*="stroke-circle"]');
       const colors = [colorA, colorB, colorC];
       circles.forEach((circle, i) => {
-        circle.style.stroke = colors[i] ?? colors[colors.length - 1];
-        circle.style.strokeWidth = "3";
+        circle.style.stroke = filled ? "#000" : (colors[i] ?? colors[colors.length - 1]);
+        circle.style.strokeWidth = filled ? "1" : "3";
       });
     };
     applyStrokes();
     const observer = new MutationObserver(applyStrokes);
     observer.observe(el, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, [colorA, colorB, colorC]);
+  }, [colorA, colorB, colorC, filled]);
 
   const elems = useMemo(
     () => buildThreeCircleElems(
@@ -194,7 +194,7 @@ function Stat({ label, value, sub, color }) {
 
 const styles = {
   outer: {
-    display: "flex", alignItems: "flex-start", gap: "20px", flexWrap: "wrap",
+    display: "flex", alignItems: "flex-start", gap: "20px", flexWrap: "nowrap",
   },
   chartWrapper: {
     background: "#fff", borderRadius: "8px", padding: "16px",

@@ -37,15 +37,15 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
       const circles = el.querySelectorAll('[class*="stroke-circle"]');
       const colors = [colorA, colorB];
       circles.forEach((circle, i) => {
-        circle.style.stroke = colors[i] ?? colors[colors.length - 1];
-        circle.style.strokeWidth = "3";
+        circle.style.stroke = filled ? "#000" : (colors[i] ?? colors[colors.length - 1]);
+        circle.style.strokeWidth = filled ? "1" : "3";
       });
     };
     applyStrokes();
     const observer = new MutationObserver(applyStrokes);
     observer.observe(el, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, [colorA, colorB]);
+  }, [colorA, colorB, filled]);
 
   const elems = useMemo(
     () => buildTwoCircleElems(labelA, labelB, onlyA, onlyB, both),
