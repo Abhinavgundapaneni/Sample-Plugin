@@ -15,9 +15,9 @@ const EDITOR_PANEL = [
   { name: "labelA", type: "text", label: "Set A Label", defaultValue: "Set A" },
   { name: "labelB", type: "text", label: "Set B Label", defaultValue: "Set B" },
   { name: "labelC", type: "text", label: "Set C Label", defaultValue: "Set C" },
-  { name: "onlyA", type: "column", source: "source", label: "Only A Count", allowedTypes: ["number", "integer"] },
-  { name: "onlyB", type: "column", source: "source", label: "Only B Count", allowedTypes: ["number", "integer"] },
-  { name: "onlyC", type: "column", source: "source", label: "Only C Count", allowedTypes: ["number", "integer"] },
+  { name: "totalA", type: "column", source: "source", label: "Total A Count", allowedTypes: ["number", "integer"] },
+  { name: "totalB", type: "column", source: "source", label: "Total B Count", allowedTypes: ["number", "integer"] },
+  { name: "totalC", type: "column", source: "source", label: "Total C Count", allowedTypes: ["number", "integer"] },
   { name: "aAndB", type: "column", source: "source", label: "A ∩ B Count", allowedTypes: ["number", "integer"] },
   { name: "aAndC", type: "column", source: "source", label: "A ∩ C Count", allowedTypes: ["number", "integer"] },
   { name: "bAndC", type: "column", source: "source", label: "B ∩ C Count", allowedTypes: ["number", "integer"] },
@@ -26,16 +26,16 @@ const EDITOR_PANEL = [
 
 const DEFAULT = {
   labelA: "Premium", labelB: "Newsletter", labelC: "Beta",
-  onlyA: 28, onlyB: 22, onlyC: 18, aAndB: 14, aAndC: 10, bAndC: 8, allThree: 6,
+  totalA: 58, totalB: 50, totalC: 42, aAndB: 20, aAndC: 16, bAndC: 14, allThree: 6,
 };
 
 function parseCsv(text) {
   const rows = Papa.parse(text.trim(), { header: true, skipEmptyLines: true }).data;
   const r = rows[0] || {};
   return {
-    onlyA: Number(r.only_a) || 0,
-    onlyB: Number(r.only_b) || 0,
-    onlyC: Number(r.only_c) || 0,
+    totalA: Number(r.total_a) || 0,
+    totalB: Number(r.total_b) || 0,
+    totalC: Number(r.total_c) || 0,
     aAndB: Number(r.a_and_b) || 0,
     aAndC: Number(r.a_and_c) || 0,
     bAndC: Number(r.b_and_c) || 0,
@@ -50,15 +50,15 @@ export default function ThreeCirclePage() {
   const labelA = useConfig("labelA") || "Set A";
   const labelB = useConfig("labelB") || "Set B";
   const labelC = useConfig("labelC") || "Set C";
-  const onlyACol = useConfig("onlyA");
-  const onlyBCol = useConfig("onlyB");
-  const onlyCCol = useConfig("onlyC");
+  const totalACol = useConfig("totalA");
+  const totalBCol = useConfig("totalB");
+  const totalCCol = useConfig("totalC");
   const aAndBCol = useConfig("aAndB");
   const aAndCCol = useConfig("aAndC");
   const bAndCCol = useConfig("bAndC");
   const allThreeCol = useConfig("allThree");
 
-  const sourceConfigured = !!(sourceId && onlyACol && onlyBCol && onlyCCol && aAndBCol && aAndCCol && bAndCCol && allThreeCol);
+  const sourceConfigured = !!(sourceId && totalACol && totalBCol && totalCCol && aAndBCol && aAndCCol && bAndCCol && allThreeCol);
   const sigmaData = useElementData(sourceId);
   const [, setLoading] = useLoadingState(true);
 
@@ -83,18 +83,38 @@ export default function ThreeCirclePage() {
       });
   }, [sourceConfigured]);
 
-  const chartProps = sourceConfigured && sigmaData
-    ? {
+  const chartProps = (() => {
+    if (sourceConfigured && sigmaData) {
+      const totalA = readCount(sigmaData, totalACol);
+      const totalB = readCount(sigmaData, totalBCol);
+      const totalC = readCount(sigmaData, totalCCol);
+      const aAndB = readCount(sigmaData, aAndBCol);
+      const aAndC = readCount(sigmaData, aAndCCol);
+      const bAndC = readCount(sigmaData, bAndCCol);
+      const allThree = readCount(sigmaData, allThreeCol);
+      return {
         labelA, labelB, labelC,
-        onlyA: readCount(sigmaData, onlyACol),
-        onlyB: readCount(sigmaData, onlyBCol),
-        onlyC: readCount(sigmaData, onlyCCol),
-        aAndB: readCount(sigmaData, aAndBCol),
-        aAndC: readCount(sigmaData, aAndCCol),
-        bAndC: readCount(sigmaData, bAndCCol),
-        allThree: readCount(sigmaData, allThreeCol),
-      }
-    : { ...csvData, labelA: DEFAULT.labelA, labelB: DEFAULT.labelB, labelC: DEFAULT.labelC };
+        onlyA: totalA - aAndB - aAndC + allThree,
+        onlyB: totalB - aAndB - bAndC + allThree,
+        onlyC: totalC - aAndC - bAndC + allThree,
+        aAndB: aAndB - allThree,
+        aAndC: aAndC - allThree,
+        bAndC: bAndC - allThree,
+        allThree,
+      };
+    }
+    const { totalA, totalB, totalC, aAndB, aAndC, bAndC, allThree } = csvData;
+    return {
+      labelA: DEFAULT.labelA, labelB: DEFAULT.labelB, labelC: DEFAULT.labelC,
+      onlyA: totalA - aAndB - aAndC + allThree,
+      onlyB: totalB - aAndB - bAndC + allThree,
+      onlyC: totalC - aAndC - bAndC + allThree,
+      aAndB: aAndB - allThree,
+      aAndC: aAndC - allThree,
+      bAndC: bAndC - allThree,
+      allThree,
+    };
+  })();
 
   const ready = sourceConfigured ? sigmaData != null : devReady;
 

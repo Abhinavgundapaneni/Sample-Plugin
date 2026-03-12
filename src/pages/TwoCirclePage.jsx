@@ -14,20 +14,20 @@ const EDITOR_PANEL = [
   { name: "source", type: "element", label: "Data Source" },
   { name: "labelA", type: "text", label: "Set A Label", defaultValue: "Set A" },
   { name: "labelB", type: "text", label: "Set B Label", defaultValue: "Set B" },
-  { name: "onlyA", type: "column", source: "source", label: "Only A Count", allowedTypes: ["number", "integer"] },
-  { name: "onlyB", type: "column", source: "source", label: "Only B Count", allowedTypes: ["number", "integer"] },
+  { name: "totalA", type: "column", source: "source", label: "Total A Count", allowedTypes: ["number", "integer"] },
+  { name: "totalB", type: "column", source: "source", label: "Total B Count", allowedTypes: ["number", "integer"] },
   { name: "aAndB", type: "column", source: "source", label: "A ∩ B Count", allowedTypes: ["number", "integer"] },
 ];
 
-const DEFAULT = { labelA: "Treaters", labelB: "Writers", onlyA: 45, onlyB: 30, both: 25 };
+const DEFAULT = { labelA: "Treaters", labelB: "Writers", totalA: 70, totalB: 55, aAndB: 25 };
 
 function parseCsv(text) {
   const rows = Papa.parse(text.trim(), { header: true, skipEmptyLines: true }).data;
   const r = rows[0] || {};
   return {
-    onlyA: Number(r.only_a) || 0,
-    onlyB: Number(r.only_b) || 0,
-    both: Number(r.both) || Number(r.a_and_b) || 0,
+    totalA: Number(r.total_a) || 0,
+    totalB: Number(r.total_b) || 0,
+    aAndB: Number(r.a_and_b) || 0,
   };
 }
 
@@ -37,11 +37,11 @@ export default function TwoCirclePage() {
   const sourceId = useConfig("source");
   const labelA = useConfig("labelA") || "Set A";
   const labelB = useConfig("labelB") || "Set B";
-  const onlyACol = useConfig("onlyA");
-  const onlyBCol = useConfig("onlyB");
+  const totalACol = useConfig("totalA");
+  const totalBCol = useConfig("totalB");
   const aAndBCol = useConfig("aAndB");
 
-  const sourceConfigured = !!(sourceId && onlyACol && onlyBCol && aAndBCol);
+  const sourceConfigured = !!(sourceId && totalACol && totalBCol && aAndBCol);
   const sigmaData = useElementData(sourceId);
   const [, setLoading] = useLoadingState(true);
 
@@ -66,14 +66,16 @@ export default function TwoCirclePage() {
       });
   }, [sourceConfigured]);
 
-  const chartProps = sourceConfigured && sigmaData
-    ? {
-        labelA, labelB,
-        onlyA: readCount(sigmaData, onlyACol),
-        onlyB: readCount(sigmaData, onlyBCol),
-        both: readCount(sigmaData, aAndBCol),
-      }
-    : { ...csvData, labelA: DEFAULT.labelA, labelB: DEFAULT.labelB };
+  const chartProps = (() => {
+    if (sourceConfigured && sigmaData) {
+      const totalA = readCount(sigmaData, totalACol);
+      const totalB = readCount(sigmaData, totalBCol);
+      const both = readCount(sigmaData, aAndBCol);
+      return { labelA, labelB, onlyA: totalA - both, onlyB: totalB - both, both };
+    }
+    const { totalA, totalB, aAndB } = csvData;
+    return { labelA: DEFAULT.labelA, labelB: DEFAULT.labelB, onlyA: totalA - aAndB, onlyB: totalB - aAndB, both: aAndB };
+  })();
 
   const ready = sourceConfigured ? sigmaData != null : devReady;
 
