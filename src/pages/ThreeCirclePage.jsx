@@ -58,12 +58,17 @@ export default function ThreeCirclePage() {
   const bAndCCol = useConfig("bAndC");
   const allThreeCol = useConfig("allThree");
 
-  const sourceConfigured = !!sourceId;
+  const sourceConfigured = !!(sourceId && onlyACol && onlyBCol && onlyCCol && aAndBCol && aAndCCol && bAndCCol && allThreeCol);
   const sigmaData = useElementData(sourceId);
   const [, setLoading] = useLoadingState(true);
 
   const [csvData, setCsvData] = useState(DEFAULT);
   const [devReady, setDevReady] = useState(false);
+
+  // Signal Sigma that data is loaded when sigmaData arrives
+  useEffect(() => {
+    if (sourceConfigured && sigmaData) setLoading(false);
+  }, [sourceConfigured, sigmaData]);
 
   useEffect(() => {
     if (sourceConfigured) return;

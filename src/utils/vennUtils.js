@@ -43,10 +43,13 @@ export function buildThreeCircleElems(
   ];
 }
 
-/** Reads a count value from sigmaData. Returns the numeric value of the first row. */
+/** Reads a count value from sigmaData. Sums all rows in the column to handle both
+ *  single-row aggregated sources and multi-row sources where each value is a count. */
 export function readCount(sigmaData, colId) {
   if (!sigmaData || !colId) return 0;
   const vals = sigmaData[colId];
   if (!vals || vals.length === 0) return 0;
-  return Number(vals[0]) || 0;
+  // If only one row, return it directly; otherwise sum all values
+  if (vals.length === 1) return Number(vals[0]) || 0;
+  return vals.reduce((sum, v) => sum + (Number(v) || 0), 0);
 }
