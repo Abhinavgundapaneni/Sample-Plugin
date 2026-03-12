@@ -79,8 +79,15 @@ export default function TwoCirclePage() {
 
   if (!ready) return <div style={styles.center}>Loading...</div>;
 
+  const isFromSigma = sourceConfigured && sigmaData != null;
+
   return (
     <div style={styles.container}>
+      <div style={styles.header}>
+        <span style={isFromSigma ? styles.badgeSigma : styles.badgeCsv}>
+          {isFromSigma ? "⬡ Data from Sigma" : "📄 Data from CSV (Demo)"}
+        </span>
+      </div>
       <TwoCircleChart {...chartProps} />
     </div>
   );
