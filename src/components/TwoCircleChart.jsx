@@ -30,7 +30,7 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
       el.querySelectorAll('tspan, text[class*="valueTextStyle"]').forEach((t) => {
         if (t.childElementCount > 0) return;
         const m = t.textContent && t.textContent.match(/^(\d[\d,]*)\/(\d[\d,]*)$/);
-        if (m) t.textContent = m[1];
+        if (m) t.textContent = m[2];
       });
     };
     const observer = new MutationObserver(clean);
