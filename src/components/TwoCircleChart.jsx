@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { extractSets, generateCombinations, VennDiagram } from "@upsetjs/react";
+import { usePlugin } from "@sigmacomputing/plugin";
 import { buildTwoCircleElems } from "../utils/vennUtils";
 
 /**
@@ -17,6 +18,8 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
   const [filled, setFilled] = useState(true);
   const chartRef = useRef(null);
   const wrapperRef = useRef(null);
+  const { sigmaEnv } = usePlugin();
+  const isAuthor = !sigmaEnv || sigmaEnv === 'author';
 
   // Remove UpSet.js <title> elements that cause native browser tooltips
   useEffect(() => {
@@ -109,13 +112,15 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
         )}
       </div>
 
-      {/* Color picker panel */}
-      <div style={styles.colorPanel}>
-        <p style={styles.colorPanelTitle}>Colors</p>
-        <FillToggle filled={filled} onChange={setFilled} />
-        <ColorSwatch label={labelA} color={colorA} onChange={setColorA} />
-        <ColorSwatch label={labelB} color={colorB} onChange={setColorB} />
-      </div>
+      {/* Color picker panel — author only */}
+      {isAuthor && (
+        <div style={styles.colorPanel}>
+          <p style={styles.colorPanelTitle}>Colors</p>
+          <FillToggle filled={filled} onChange={setFilled} />
+          <ColorSwatch label={labelA} color={colorA} onChange={setColorA} />
+          <ColorSwatch label={labelB} color={colorB} onChange={setColorB} />
+        </div>
+      )}
     </div>
   );
 }
