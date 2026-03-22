@@ -1,0 +1,13 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/*.css", "/*.js", "/*.svg", "/*.png", "/*.csv"]
+  },
+  "globalHeaders": {
+    "X-Frame-Options": "ALLOWALL",
+    "Cache-Control": "no-cache"
+  },
+  "mimeTypes": {
+    ".csv": "text/csv"
+  }
+}
