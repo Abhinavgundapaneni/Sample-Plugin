@@ -6,13 +6,6 @@
 **Target:** Azure Static Web Apps (SWA)  
 **Repository:** https://github.com/Abhinavgundapaneni/Sample-Plugin
 
-This branch contains all code changes required to move from Netlify to Azure Static Web Apps. The following files have already been updated:
-
-| Change | Detail |
-|---|---|
-| ✅ Added `staticwebapp.config.json` | Replaces `netlify.toml` — handles SPA routing, headers, MIME types |
-| ✅ Removed `netlify.toml` | No longer needed |
-
 ---
 
 ## Prerequisites
@@ -22,21 +15,7 @@ This branch contains all code changes required to move from Netlify to Azure Sta
 
 ---
 
-## Step 1: Merge This Branch
-
-Before creating the Azure resource, merge `azure-migration` into `main`:
-
-```bash
-git checkout main
-git merge azure-migration
-git push
-```
-
-Or open a Pull Request on GitHub and merge via the UI.
-
----
-
-## Step 2: Create the Azure Static Web App
+## Step 1: Create the Azure Static Web App
 
 ### Option A: Azure Portal (recommended)
 
@@ -82,7 +61,7 @@ az staticwebapp create \
 
 ---
 
-## Step 3: GitHub Actions CI/CD (Auto-created)
+## Step 2: GitHub Actions CI/CD (Auto-created)
 
 Azure automatically commits a GitHub Actions workflow to your repo at:
 `.github/workflows/azure-static-web-apps-<random>.yml`
@@ -95,7 +74,7 @@ Verify at: **GitHub → Actions tab**
 
 ---
 
-## Step 4: Get Your New URL
+## Step 3: Get Your New URL
 
 After deployment (~2 minutes):
 - **Azure Portal → Static Web Apps → sigma-venn-plugin → Overview → URL**
@@ -104,7 +83,7 @@ Format: `https://<generated-name>.azurestaticapps.net`
 
 ---
 
-## Step 5: Update Sigma Plugin URL
+## Step 4: Update Sigma Plugin URL
 
 1. **Sigma → Administration → Plugins → Edit** your plugin
 2. Replace the old URL:
@@ -114,7 +93,7 @@ Format: `https://<generated-name>.azurestaticapps.net`
 
 ---
 
-## Step 6: Set Up a Custom Domain (Optional)
+## Step 5: Set Up a Custom Domain (Optional)
 
 1. **Azure Portal → Static Web Apps → sigma-venn-plugin → Custom domains**
 2. Click **Add** → enter your domain
@@ -123,39 +102,12 @@ Format: `https://<generated-name>.azurestaticapps.net`
 
 ---
 
-## Step 7: Decommission Old Netlify Site
+## Step 6: Decommission Old Netlify Site
 
 Once verified on Azure:
 1. Test `/2-circle` and `/3-circle` routes
 2. Confirm plugin loads inside Sigma iframe
 3. Delete the Netlify site: **Netlify → Sites → Site settings → Danger zone → Delete site**
-
----
-
-## What `staticwebapp.config.json` Does
-
-```json
-{
-  "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/*.css", "/*.js", "/*.svg", "/*.png", "/*.csv"]
-  },
-  "globalHeaders": {
-    "X-Frame-Options": "ALLOWALL",
-    "Cache-Control": "no-cache"
-  },
-  "mimeTypes": {
-    ".csv": "text/csv"
-  }
-}
-```
-
-| Setting | Purpose |
-|---|---|
-| `navigationFallback` | SPA routing — serves `index.html` for all routes so React Router handles `/2-circle`, `/3-circle` |
-| `X-Frame-Options: ALLOWALL` | Required for Sigma to embed the plugin in an iframe |
-| `Cache-Control: no-cache` | Ensures latest build is always served |
-| `.csv` MIME type | Ensures CSV fallback files are served correctly |
 
 ---
 
