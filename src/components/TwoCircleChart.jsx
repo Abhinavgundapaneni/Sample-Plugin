@@ -27,7 +27,8 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
     if (!el) return;
     const clean = () => {
       el.querySelectorAll("title").forEach((t) => t.remove());
-      el.querySelectorAll("tspan").forEach((t) => {
+      el.querySelectorAll('tspan, text[class*="valueTextStyle"]').forEach((t) => {
+        if (t.childElementCount > 0) return;
         const m = t.textContent && t.textContent.match(/^(\d[\d,]*)\/(\d[\d,]*)$/);
         if (m) t.textContent = m[1];
       });
