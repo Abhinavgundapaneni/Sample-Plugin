@@ -88,6 +88,7 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
             onHover={setSelection}
             selectionColor={filled ? "" : "white"}
             filled={filled}
+            valueFormat={(v) => v.toLocaleString()}
           />
         </div>
         {selection && (

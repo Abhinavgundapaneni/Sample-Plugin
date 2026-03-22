@@ -108,6 +108,7 @@ export default function ThreeCircleChart({
             onHover={setSelection}
             selectionColor={filled ? "" : "white"}
             filled={filled}
+            valueFormat={(v) => v.toLocaleString()}
           />
         </div>
         {selection && (
