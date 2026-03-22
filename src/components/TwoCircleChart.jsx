@@ -21,13 +21,19 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
   const { sigmaEnv } = usePlugin();
   const isAuthor = !sigmaEnv || sigmaEnv === 'author';
 
-  // Remove UpSet.js <title> elements that cause native browser tooltips
+  // Remove UpSet.js <title> elements and strip N/M fraction labels
   useEffect(() => {
     const el = chartRef.current;
     if (!el) return;
-    const clean = () => el.querySelectorAll("title").forEach((t) => t.remove());
+    const clean = () => {
+      el.querySelectorAll("title").forEach((t) => t.remove());
+      el.querySelectorAll("tspan").forEach((t) => {
+        const m = t.textContent && t.textContent.match(/^(\d[\d,]*)\/(\d[\d,]*)$/);
+        if (m) t.textContent = m[1];
+      });
+    };
     const observer = new MutationObserver(clean);
-    observer.observe(el, { childList: true, subtree: true });
+    observer.observe(el, { childList: true, subtree: true, characterData: true });
     clean();
     return () => observer.disconnect();
   }, []);
