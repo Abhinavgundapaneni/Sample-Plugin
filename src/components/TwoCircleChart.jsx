@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { extractSets, generateCombinations, VennDiagram } from "@upsetjs/react";
-import { usePlugin } from "@sigmacomputing/plugin";
 import { buildTwoCircleElems } from "../utils/vennUtils";
 
 /**
@@ -18,13 +17,12 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
   const [filled, setFilled] = useState(true);
   const chartRef = useRef(null);
   const wrapperRef = useRef(null);
-  const { sigmaEnv } = usePlugin();
-  const isAuthor = !sigmaEnv || sigmaEnv === 'author';
 
   // Remove UpSet.js <title> elements and strip N/M fraction labels
   useEffect(() => {
     const el = chartRef.current;
     if (!el) return;
+    let rafId = null;
     const clean = () => {
       el.querySelectorAll("title").forEach((t) => t.remove());
       el.querySelectorAll('tspan, text[class*="valueTextStyle"]').forEach((t) => {
@@ -33,10 +31,14 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
         if (m) t.textContent = m[2];
       });
     };
-    const observer = new MutationObserver(clean);
+    const scheduleClean = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(clean);
+    };
+    const observer = new MutationObserver(scheduleClean);
     observer.observe(el, { childList: true, subtree: true, characterData: true });
     clean();
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); if (rafId) cancelAnimationFrame(rafId); };
   }, []);
 
   // Apply per-set stroke color and thickness
@@ -119,15 +121,13 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
         )}
       </div>
 
-      {/* Color picker panel — author only */}
-      {isAuthor && (
-        <div style={styles.colorPanel}>
-          <p style={styles.colorPanelTitle}>Colors</p>
-          <FillToggle filled={filled} onChange={setFilled} />
-          <ColorSwatch label={labelA} color={colorA} onChange={setColorA} />
-          <ColorSwatch label={labelB} color={colorB} onChange={setColorB} />
-        </div>
-      )}
+      {/* Color picker panel */}
+      <div style={styles.colorPanel}>
+        <p style={styles.colorPanelTitle}>Colors</p>
+        <FillToggle filled={filled} onChange={setFilled} />
+        <ColorSwatch label={labelA} color={colorA} onChange={setColorA} />
+        <ColorSwatch label={labelB} color={colorB} onChange={setColorB} />
+      </div>
     </div>
   );
 }
