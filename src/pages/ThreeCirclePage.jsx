@@ -18,15 +18,15 @@ const EDITOR_PANEL = [
   { name: "totalA", type: "column", source: "source", label: "Total A Count", allowedTypes: ["number", "integer"] },
   { name: "totalB", type: "column", source: "source", label: "Total B Count", allowedTypes: ["number", "integer"] },
   { name: "totalC", type: "column", source: "source", label: "Total C Count", allowedTypes: ["number", "integer"] },
-  { name: "aAndB", type: "column", source: "source", label: "A ∩ B Count", allowedTypes: ["number", "integer"] },
-  { name: "aAndC", type: "column", source: "source", label: "A ∩ C Count", allowedTypes: ["number", "integer"] },
-  { name: "bAndC", type: "column", source: "source", label: "B ∩ C Count", allowedTypes: ["number", "integer"] },
+  { name: "aAndB", type: "column", source: "source", label: "A ∩ B only (excl. A∩B∩C)", allowedTypes: ["number", "integer"] },
+  { name: "aAndC", type: "column", source: "source", label: "A ∩ C only (excl. A∩B∩C)", allowedTypes: ["number", "integer"] },
+  { name: "bAndC", type: "column", source: "source", label: "B ∩ C only (excl. A∩B∩C)", allowedTypes: ["number", "integer"] },
   { name: "allThree", type: "column", source: "source", label: "A ∩ B ∩ C Count", allowedTypes: ["number", "integer"] },
 ];
 
 const DEFAULT = {
   labelA: "Premium", labelB: "Newsletter", labelC: "Beta",
-  totalA: 58, totalB: 50, totalC: 42, aAndB: 20, aAndC: 16, bAndC: 14, allThree: 6,
+  totalA: 58, totalB: 50, totalC: 42, aAndB: 14, aAndC: 10, bAndC: 8, allThree: 6,
 };
 
 function parseCsv(text) {
@@ -94,24 +94,24 @@ export default function ThreeCirclePage() {
       const allThree = readCount(sigmaData, allThreeCol);
       return {
         labelA, labelB, labelC,
-        onlyA: totalA - aAndB - aAndC + allThree,
-        onlyB: totalB - aAndB - bAndC + allThree,
-        onlyC: totalC - aAndC - bAndC + allThree,
-        aAndB: aAndB - allThree,
-        aAndC: aAndC - allThree,
-        bAndC: bAndC - allThree,
+        onlyA: totalA - aAndB - aAndC - allThree,
+        onlyB: totalB - aAndB - bAndC - allThree,
+        onlyC: totalC - aAndC - bAndC - allThree,
+        aAndB,
+        aAndC,
+        bAndC,
         allThree,
       };
     }
     const { totalA, totalB, totalC, aAndB, aAndC, bAndC, allThree } = csvData;
     return {
       labelA: DEFAULT.labelA, labelB: DEFAULT.labelB, labelC: DEFAULT.labelC,
-      onlyA: totalA - aAndB - aAndC + allThree,
-      onlyB: totalB - aAndB - bAndC + allThree,
-      onlyC: totalC - aAndC - bAndC + allThree,
-      aAndB: aAndB - allThree,
-      aAndC: aAndC - allThree,
-      bAndC: bAndC - allThree,
+      onlyA: totalA - aAndB - aAndC - allThree,
+      onlyB: totalB - aAndB - bAndC - allThree,
+      onlyC: totalC - aAndC - bAndC - allThree,
+      aAndB,
+      aAndC,
+      bAndC,
       allThree,
     };
   })();
