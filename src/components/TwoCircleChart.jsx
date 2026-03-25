@@ -71,7 +71,7 @@ export default function TwoCircleChart({ labelA, labelB, onlyA, onlyB, both }) {
     });
     return s;
   }, [elems, labelA, colorA, colorB, filled]);
-  const combinations = useMemo(() => generateCombinations(sets), [sets]);
+  const combinations = useMemo(() => generateCombinations(sets, { type: 'distinctIntersection' }), [sets]);
 
   const total = Number(onlyA) + Number(onlyB) + Number(both);
 

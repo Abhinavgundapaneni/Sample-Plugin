@@ -87,7 +87,7 @@ export default function ThreeCircleChart({
     });
     return s;
   }, [elems, labelA, labelB, colorA, colorB, colorC, filled]);
-  const combinations = useMemo(() => generateCombinations(sets), [sets]);
+  const combinations = useMemo(() => generateCombinations(sets, { type: 'distinctIntersection' }), [sets]);
 
   const total =
     Number(onlyA) + Number(onlyB) + Number(onlyC) +
