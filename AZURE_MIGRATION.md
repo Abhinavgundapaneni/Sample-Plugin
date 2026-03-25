@@ -113,7 +113,6 @@ Once verified on Azure:
 
 ## Verification Checklist
 
-- [ ] `azure-migration` branch merged into `main`
 - [ ] Azure Static Web App created and linked to GitHub repo
 - [ ] GitHub Actions workflow completed successfully (green check)
 - [ ] `/2-circle` route loads without 404
