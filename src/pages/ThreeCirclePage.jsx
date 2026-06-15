@@ -120,15 +120,8 @@ export default function ThreeCirclePage() {
 
   if (!ready) return <div style={styles.center}>Loading...</div>;
 
-  const isFromSigma = sourceConfigured && sigmaData != null;
-
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <span style={isFromSigma ? styles.badgeSigma : styles.badgeCsv}>
-          {isFromSigma ? "⬡ Data from Sigma" : "📄 Data from CSV (Demo)"}
-        </span>
-      </div>
       <ThreeCircleChart {...chartProps} />
     </div>
   );
@@ -136,20 +129,6 @@ export default function ThreeCirclePage() {
 
 const styles = {
   container: { padding: "20px", maxWidth: "900px", margin: "0 auto" },
-  header: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    marginBottom: "20px", flexWrap: "wrap", gap: "10px",
-  },
-  headerLeft: { display: "flex", alignItems: "center", gap: "10px" },
-  title: { fontSize: "1.3rem", color: "#1a1a2e", margin: 0 },
-  badgeSigma: {
-    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px", borderRadius: "12px",
-    background: "#d4edda", color: "#155724", border: "1px solid #c3e6cb",
-  },
-  badgeCsv: {
-    fontSize: "0.75rem", fontWeight: 600, padding: "3px 10px", borderRadius: "12px",
-    background: "#fff3cd", color: "#856404", border: "1px solid #ffeeba",
-  },
   nav: { display: "flex", gap: "4px" },
   navLink: {
     padding: "6px 16px", border: "1px solid #d1d5db", borderRadius: "6px",
